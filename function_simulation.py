@@ -40,8 +40,7 @@ def Function_simulation(Sys_Pc_vcm,Sys_Pc_pzt,Sys_Cd_vcm,Sys_Fm_vcm,Sys_Cd_pzt,S
     ## Simulation condition
     Mr_p=20                          # Multi-rate for continuous-time system
     Tsc=Ts/Mr_p                      # Sampling time for continuous-time system
-#    Tsim=1.1                         # End of simulation time
-    Tsim = 0.1 # run time
+    Tsim=1.1                         # End of simulation time
 
     ## Controlled object
     Sys_Pcd_vcm=ctm.c2d(ctm.ss(Sys_Pc_vcm),Tsc)
@@ -689,8 +688,46 @@ def Function_simulation_clean(Sys_Pc_vcm,Sys_Pc_pzt,Sys_Cd_vcm,Sys_Fm_vcm,Sys_Cd
     
     return sim_result
 
+def run_case(case_id):
+    """
+    Run one benchmark case.
 
+    case_id: integer from 1 to 9
+    """
 
+    if case_id < 1 or case_id > 9:
+        raise ValueError("case_id must be between 1 and 9")
+
+    print(f"Running case {case_id}...")
+
+    Sys_Pc_vcm = getattr(plant, f"Sys_Pc_vcm_c{case_id}")
+    Sys_Pc_pzt = getattr(plant, f"Sys_Pc_pzt_c{case_id}")
+
+    sim_result = Function_simulation(
+        Sys_Pc_vcm,
+        Sys_Pc_pzt,
+        utils.get_Sys_Cd_vcm(),
+        utils.get_Sys_Fm_vcm(),
+        utils.get_Sys_Cd_pzt(),
+        utils.get_Sys_Fm_pzt(),
+        plant.Ts,
+        plant.Mr_f,
+        case_id
+    )
+    print(f"case {case_id} finished")
+
+    return sim_result
+
+if __name__ == '__main__':
+
+    import os
+    os.makedirs("simulation_result", exist_ok=True)
+
+    CASE_ID = 2   # change this to whichever case you want
+
+    sim_result = run_case(CASE_ID)
+    
+'''
 if __name__ == '__main__':
 
     sim_result = Function_simulation(
@@ -706,8 +743,8 @@ if __name__ == '__main__':
     )
 
     print("function_simulation: case 2 finished")
-
-    """
+'''
+"""
 if __name__ == '__main__':
 
     res1 = multiprocessing.Process(target=Function_simulation, name="res1", args=(plant.Sys_Pc_vcm_c1,plant.Sys_Pc_pzt_c1,utils.get_Sys_Cd_vcm(),utils.get_Sys_Fm_vcm(),utils.get_Sys_Cd_pzt(),utils.get_Sys_Fm_pzt(),plant.Ts,plant.Mr_f,1))
