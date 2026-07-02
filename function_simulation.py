@@ -397,8 +397,7 @@ def Function_simulation_clean(Sys_Pc_vcm,Sys_Pc_pzt,Sys_Cd_vcm,Sys_Fm_vcm,Sys_Cd
     ## Simulation condition
     Mr_p=20                          # Multi-rate for continuous-time system
     Tsc=Ts/Mr_p                      # Sampling time for continuous-time system
-#    Tsim=1.1                         # End of simulation time
-    Tsim = 0.1 # run time
+    Tsim=1.1                         # End of simulation time
 
     ## Controlled object
     Sys_Pcd_vcm=ctm.c2d(ctm.ss(Sys_Pc_vcm),Tsc)
@@ -727,54 +726,3 @@ if __name__ == '__main__':
 
     sim_result = run_case(CASE_ID)
     
-'''
-if __name__ == '__main__':
-
-    sim_result = Function_simulation(
-        plant.Sys_Pc_vcm_c2,
-        plant.Sys_Pc_pzt_c2,
-        utils.get_Sys_Cd_vcm(),
-        utils.get_Sys_Fm_vcm(),
-        utils.get_Sys_Cd_pzt(),
-        utils.get_Sys_Fm_pzt(),
-        plant.Ts,
-        plant.Mr_f,
-        2
-    )
-
-    print("function_simulation: case 2 finished")
-'''
-"""
-if __name__ == '__main__':
-
-    res1 = multiprocessing.Process(target=Function_simulation, name="res1", args=(plant.Sys_Pc_vcm_c1,plant.Sys_Pc_pzt_c1,utils.get_Sys_Cd_vcm(),utils.get_Sys_Fm_vcm(),utils.get_Sys_Cd_pzt(),utils.get_Sys_Fm_pzt(),plant.Ts,plant.Mr_f,1))
-    res2 = multiprocessing.Process(target=Function_simulation, name="res2", args=(plant.Sys_Pc_vcm_c2,plant.Sys_Pc_pzt_c2,utils.get_Sys_Cd_vcm(),utils.get_Sys_Fm_vcm(),utils.get_Sys_Cd_pzt(),utils.get_Sys_Fm_pzt(),plant.Ts,plant.Mr_f,2))
-    res3 = multiprocessing.Process(target=Function_simulation, name="res3", args=(plant.Sys_Pc_vcm_c3,plant.Sys_Pc_pzt_c3,utils.get_Sys_Cd_vcm(),utils.get_Sys_Fm_vcm(),utils.get_Sys_Cd_pzt(),utils.get_Sys_Fm_pzt(),plant.Ts,plant.Mr_f,3))
-    res4 = multiprocessing.Process(target=Function_simulation, name="res4", args=(plant.Sys_Pc_vcm_c4,plant.Sys_Pc_pzt_c4,utils.get_Sys_Cd_vcm(),utils.get_Sys_Fm_vcm(),utils.get_Sys_Cd_pzt(),utils.get_Sys_Fm_pzt(),plant.Ts,plant.Mr_f,4))
-    res5 = multiprocessing.Process(target=Function_simulation, name="res5", args=(plant.Sys_Pc_vcm_c5,plant.Sys_Pc_pzt_c5,utils.get_Sys_Cd_vcm(),utils.get_Sys_Fm_vcm(),utils.get_Sys_Cd_pzt(),utils.get_Sys_Fm_pzt(),plant.Ts,plant.Mr_f,5))
-    res6 = multiprocessing.Process(target=Function_simulation, name="res6", args=(plant.Sys_Pc_vcm_c6,plant.Sys_Pc_pzt_c6,utils.get_Sys_Cd_vcm(),utils.get_Sys_Fm_vcm(),utils.get_Sys_Cd_pzt(),utils.get_Sys_Fm_pzt(),plant.Ts,plant.Mr_f,6))
-    res7 = multiprocessing.Process(target=Function_simulation, name="res7", args=(plant.Sys_Pc_vcm_c7,plant.Sys_Pc_pzt_c7,utils.get_Sys_Cd_vcm(),utils.get_Sys_Fm_vcm(),utils.get_Sys_Cd_pzt(),utils.get_Sys_Fm_pzt(),plant.Ts,plant.Mr_f,7))
-    res8 = multiprocessing.Process(target=Function_simulation, name="res8", args=(plant.Sys_Pc_vcm_c8,plant.Sys_Pc_pzt_c8,utils.get_Sys_Cd_vcm(),utils.get_Sys_Fm_vcm(),utils.get_Sys_Cd_pzt(),utils.get_Sys_Fm_pzt(),plant.Ts,plant.Mr_f,8))
-    res9 = multiprocessing.Process(target=Function_simulation, name="res9", args=(plant.Sys_Pc_vcm_c9,plant.Sys_Pc_pzt_c9,utils.get_Sys_Cd_vcm(),utils.get_Sys_Fm_vcm(),utils.get_Sys_Cd_pzt(),utils.get_Sys_Fm_pzt(),plant.Ts,plant.Mr_f,9))
-
-    res1.start()
-    res2.start()
-    res3.start()
-    res4.start()
-    res5.start()
-    res6.start()
-    res7.start()
-    res8.start()
-    res9.start()
-    print("function_simulation: all tasks started")
-    res1.join()
-    res2.join()
-    res3.join()
-    res4.join()
-    res5.join()
-    res6.join()
-    res7.join()
-    res8.join()
-    res9.join()
-    print("function_simulation: all tasks finished")
-"""
