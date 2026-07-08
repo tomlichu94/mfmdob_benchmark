@@ -48,7 +48,7 @@ def Function_simulation(Sys_Pc_vcm, Sys_Pc_pzt, Sys_Cd_vcm, Sys_Fm_vcm, Sys_Cd_p
     ## Simulation condition
     Mr_p=20                          # Multi-rate for continuous-time system
     Tsc=Ts/Mr_p                      # Sampling time for continuous-time system
-    Tsim=1.1                         # End of simulation time
+    Tsim=1.1                        # End of simulation time
 
     # Fan disturbance selection
     #   fan_noise_type = "random"     -> original benchmark fan disturbance
