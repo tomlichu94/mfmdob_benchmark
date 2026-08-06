@@ -101,21 +101,28 @@ def multirate_model_coeff(f_hz, t_fs, L):
     # Extract w_k from the last (n_w + 1) rows
     w_k = x_sol[-(n_w + 1):, :]
     return w_k
-
-def mmp_coeff(f_hz, t_fs, a_g, L):
+    
+def mmp_coeff(f_hz, t_fs, a_g, L, use_damped=True):
     """
     Determine FIR/IIR-MMP coefficients for signal reconstruction.
 
     Parameters:
-        f_hz (array): signal frequencies to be recovered.
-        t_fs (float): fast sampling period.
-        a_g (float) : (0,1) range, bandwidth parameter of the IIR signal recovery.
-                      Use a_g = 0 for FIR, a_g>0 for IIR.
-        L (float): Upsampling factor, can be non-integer.
+        f_hz : array-like
+            Signal frequencies to be recovered [Hz].
+        t_fs : float
+            Fast sampling period [s].
+        a_g : float
+            IIR bandwidth parameter. Use a_g = 0 for FIR, a_g > 0 for IIR.
+        L : float
+            Upsampling factor, can be non-integer.
+        use_damped : bool
+            If True, use damped pole models for known HDD fan modes.
 
     Returns:
-        w_kiir : ndarray, IIR-MMP numerator coefficients.
-        Bpara : ndarray, Denominator coefficients of the IIR-MMP.
+        w_kiir : ndarray
+            IIR-MMP numerator coefficients.
+        Bpara : ndarray
+            Denominator coefficients of the IIR-MMP.
     """
 
     frac = Fraction(L).limit_denominator(100)
@@ -127,14 +134,82 @@ def mmp_coeff(f_hz, t_fs, a_g, L):
     k_max = N_L - 1
     m_d = len(f_hz)
 
+    # Damping ratios from the continuous-time HDD fan disturbance models
+    damping_map = {
+        4220: 0.01,
+        4380: 0.008,
+        5072: 0.002,
+        5850: 0.04,
+        6660: 0.008,
+        7670: 0.003,
+        9200: 0.07,
+    }
+
+    def get_damping_ratio(freq):
+        """Return damping ratio if freq matches a known damped HDD mode."""
+        for f_key, zeta in damping_map.items():
+            if np.isclose(freq, f_key):
+                return zeta
+        return None
+
     # Construct A(z) and B(z)
     Apara = np.array([1.0])
     Bpara = np.array([1.0])
 
     for i in range(m_d):
-        omega = 2 * np.pi * f_hz[i] * t_fs
-        Apara = np.convolve(Apara, [1, -2 * np.cos(omega), 1])
-        Bpara = np.convolve(Bpara, [1, -2 * a_g * np.cos(N_L * omega), a_g**2])
+        f_i = float(f_hz[i])
+
+        zeta = get_damping_ratio(f_i) if use_damped else None
+
+        if zeta is not None:
+            # Continuous-time damped mode:
+            # s^2 + 2*zeta*omega_n*s + omega_n^2
+            omega_n = 2 * np.pi * f_i
+            omega_d = omega_n * np.sqrt(1 - zeta**2)
+
+            # Fast-rate discrete pole:
+            # z = r * exp(±j theta)
+            r = np.exp(-zeta * omega_n * t_fs)
+            theta = omega_d * t_fs
+
+            # Fast-rate internal-model polynomial:
+            # 1 - 2*r*cos(theta) z^-1 + r^2 z^-2
+            A_factor = np.array([
+                1.0,
+                -2 * r * np.cos(theta),
+                r**2
+            ])
+
+            # Same phase appears every N_L fast samples.
+            # Therefore the slow/phase pole is z^N_L:
+            r_slow = r**N_L
+            theta_slow = N_L * theta
+
+            # IIR-MMP denominator with bandwidth tuning a_g
+            B_factor = np.array([
+                1.0,
+                -2 * a_g * r_slow * np.cos(theta_slow),
+                (a_g * r_slow)**2
+            ])
+
+        else:
+            # Standard undamped sinusoidal internal model
+            omega = 2 * np.pi * f_i * t_fs
+
+            A_factor = np.array([
+                1.0,
+                -2 * np.cos(omega),
+                1.0
+            ])
+
+            B_factor = np.array([
+                1.0,
+                -2 * a_g * np.cos(N_L * omega),
+                a_g**2
+            ])
+
+        Apara = np.convolve(Apara, A_factor)
+        Bpara = np.convolve(Bpara, B_factor)
 
     m_a = len(Apara)
     n_w = 2 * m_d - 1
@@ -178,6 +253,7 @@ def mmp_coeff(f_hz, t_fs, a_g, L):
 
     # Extract IIR-MMP coefficients
     w_kiir = x_sol[-(n_w + 1):, :]
+
     return w_kiir, Bpara
 
 def signal_recovery(input_signal, f_hz, t_fs, L):
@@ -228,7 +304,7 @@ def signal_recovery(input_signal, f_hz, t_fs, L):
     out = y_fs
     return out
     
-def signal_recovery_iir(input_signal, f_hz, t_fs, a_g, L):
+def signal_recovery_iir(input_signal, f_hz, t_fs, a_g, L, use_damped=True):
     """
     IIR signal recovery using fractional-speed sampling.
 
@@ -256,7 +332,7 @@ def signal_recovery_iir(input_signal, f_hz, t_fs, a_g, L):
     D_L = int(frac.denominator)
 
     # Find IIR-MMP coefficients
-    w_kiir, Bpara = mmp_coeff(f_hz, t_fs, a_g, L)
+    w_kiir, Bpara = mmp_coeff(f_hz, t_fs, a_g, L, use_damped=use_damped)
 
     # Determine signal lengths
     length_ss = len(input_signal)
